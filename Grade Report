@@ -1,0 +1,199 @@
+#include <fstream>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+string getFilePath(const string& fileName) {
+	string path = __FILE__; //gets source code path, include file name
+	path = path.substr(0, 1 + path.find_last_of('\\')); //removes file name
+	path += fileName; //adds input file to path
+	return path;
+}
+
+class StudentReport
+{
+	public:
+		char LetterGrade;
+		int Average;
+		string FirstName;
+		string LastName;
+		vector<double> Grades;
+		StudentReport(vector<string> Names, vector<double> Grade)
+		{
+			FirstName = Names[0];
+			LastName = Names[1];
+			Grades = Grade;
+			CalculateAverage();
+			CalculateLetterGrade();
+		}
+	private:
+		void CalculateAverage()
+		{
+			Average = (Grades[0] + Grades[1] + Grades[2] + Grades[3] + (2 * Grades[4])) / 6;
+		}
+		void CalculateLetterGrade()
+		{
+			if (Average >= 90)
+			{
+				LetterGrade = 'a';
+			}
+			else if (Average >= 80)
+			{
+				LetterGrade = 'b';
+			}
+			else if (Average >= 70)
+			{
+				LetterGrade = 'c';
+			}
+			else
+			{
+				LetterGrade = 'f';
+			}
+		}
+};
+
+class ClassReport
+{
+	public:
+		ClassReport(vector<StudentReport> Reports)
+		{
+			Report = Reports;
+		}
+		void FinishReport()
+		{
+			string InputString = "GradeReport.txt";
+			std::cout << endl << "Report saved as " + InputString;
+			static ofstream InputData;
+			InputData.open(getFilePath(InputString));
+
+			vector<string> FirstName;
+			vector<string> LastName;
+			vector<int> Average;
+			vector<char> LetterGrade;
+			vector<vector<double>> Grades;
+			for (int i = 0; i < Report.size(); i++)
+			{
+				FirstName.push_back(Report[i].FirstName);
+				LastName.push_back(Report[i].LastName);
+				Average.push_back(Report[i].Average);
+				LetterGrade.push_back(Report[i].LetterGrade);
+				Grades.push_back(Report[i].Grades);
+
+				InputData << FirstName[i] << " " << LastName[i] << " ";
+				for (int a = 0; a < 5; a++)
+				{
+					InputData << Grades[i][a] << " ";
+				}
+				InputData << Average[i] << " " << LetterGrade[i] << endl;
+			}
+			for (int i = 0; i < 5; i++)
+			{
+				vector<double> Test = GetTestGrades(Grades, i);
+				InputData << "Test " << i + 1 << " Average= " << CalAverage(Test) << " Highest Grade= " << FindHighestValue(Test) << endl;
+			}
+
+			int Student = FindHighestIndex(Average);
+			InputData << "Students with the highest average ";
+			InputData << FirstName[Student] << " " << LastName[Student] << " ";
+			for (int a = 0; a < 5; a++)
+			{
+				InputData << Grades[Student][a] << " ";
+			}
+			InputData << Average[Student] << " " << LetterGrade[Student] << endl;
+			InputData.close();
+
+		}
+	private:
+		vector<StudentReport> Report;
+		vector<double> GetTestGrades(vector<vector<double>> Tests, int Test)
+		{
+			vector<double> Grades;
+			for (int i = 0; i < Tests.size(); i++)
+			{
+				Grades.push_back(Tests[i][Test]);
+			}
+			return(Grades);
+		}
+		double FindHighestValue(vector<double> Values)
+		{	//returns the highest value
+			std::cout << FindHighestIndex(Values);
+			return(Values[FindHighestIndex(Values)]);
+		}
+		int FindHighestValue(vector<int> Values)
+		{
+			return(Values[FindHighestIndex(Values)]);
+		}
+		double FindHighestIndex(vector<double> Values)
+		{
+			double MaxValue = Values[0];
+			int Index = 0;
+			for (int i = 1; i < Values.size(); i++)
+			{
+				if (MaxValue < Values[i])
+				{
+					MaxValue = Values[i];
+					Index = i;
+				}
+			}
+			return(Index);
+		}
+		int FindHighestIndex(vector<int> Values)
+		{
+			double MaxValue = Values[0];
+			int Index = 0;
+			for (int i = 1; i < Values.size(); i++)
+			{
+				if (MaxValue < Values[i])
+				{
+					MaxValue = Values[i];
+					Index = i;
+				}
+			}
+			return(Index);
+		}
+		double CalAverage(vector<double> Values)
+		{
+			double Total = 0;
+			for (int i = 0; i < Values.size(); i++)
+			{
+				Total += Values[i];
+			}
+			return(Total / Values.size());
+		}
+};
+
+
+int main()
+{
+	//static string InputString = "students.txt";
+	string InputString;
+	std::cout << "Please Input The Name Of The File" << endl;
+	std::cin >> InputString;
+	static fstream InputData;
+	InputData.open(getFilePath(InputString));
+
+	std::cout << "Please Enter The Amount of Students" << endl;
+	int Students;
+	std::cin >> Students;
+
+	vector<string> Name = vector<string>(2);
+	vector<double> Grade = vector<double>(5);
+	vector<StudentReport> GradeReport = vector<StudentReport>();
+	
+	for (int i = 0; i < Students; i++)
+	{
+		InputData >> Name[0];
+		InputData >> Name[1];
+		InputData >> Grade[0];
+		InputData >> Grade[1];
+		InputData >> Grade[2];
+		InputData >> Grade[3];
+		InputData >> Grade[4];
+		GradeReport.push_back(StudentReport(Name, Grade));
+	}
+
+	InputData.close(); 
+
+	ClassReport FullReport = ClassReport(GradeReport);
+	FullReport.FinishReport();
+}
